@@ -23,6 +23,10 @@ class Location:
         if self.word_domain is not None and self.flag is not None:
             if self.flag == 'location_init':
                 for data in self.word_domain:
+                    # 若有附近字詞, 區域塞入'x'
+                    if data['domain'] == '距離':
+                        if data['word'] == '附近':
+                            self.template['區域'] = 'x'
                     if data['domain'] == '地點':
                         self.template['地點'] = data['word']
                     if data['domain'] == '城市':

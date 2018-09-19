@@ -3,4 +3,5 @@ __pycache__/
 .DS_Store
 .idea
 !Icon
-logs/
+logs/*.log
+static/

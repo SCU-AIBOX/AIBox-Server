@@ -26,7 +26,7 @@ def logout_timeout():
     print('start logout timeout thread !')
     print('登出倒數', times, '秒')
     
-    while times != 0:
+    while times!=0 and times>=0:
         time.sleep(1)
         times = times - 1
         
@@ -38,6 +38,7 @@ def logout_timeout():
                 login_collect = db['login']
                 login_collect.update_many({'_id': 0}, {'$set':{'is_login': False, "user_nickname": ''}})
                 print('登出成功!')
+
             except:
                 print('登出錯誤!')
                   
@@ -150,6 +151,7 @@ def chatbot_chatbot_resp():
             'flag': '',
             'response': '音箱登入成功'
         }
+        times = 300
         
         # 登出倒數
         # 是否為登入狀態，並計時倒數
