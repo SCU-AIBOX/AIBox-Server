@@ -687,5 +687,25 @@ def add_remind():
         }
         return jsonify(resp)
     
-    
+@app.route('/api/androidUser/addARLocation', methods=['POST'])
+def add_ARLocation():
+    '''新增使用者利用AR查詢地點之資訊
+        Params:
+            user_latitude: 使用者手機所在之經度
+            user_longitude: 使用者手機所在之緯度
+            locations: [
+            {
+                location_name: 地點名稱,
+                latitude: 地點經度,
+                longitude: 地點緯度,
+                rating: 地點評價
+            }
+         ]
+        Returns:
+            {
+                'status': '200'->成功; '404'->失敗
+                'result': 新增AR地點是否成功
+                'msg': 訊息
+            }
+        '''
 
