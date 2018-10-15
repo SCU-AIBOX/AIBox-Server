@@ -190,7 +190,19 @@ class Matcher():
             t.join()
 
         if not q.empty():
-            return q.get()
+            queue_domain = []
+
+            while(not q.empty()):
+                queue_domain.append(q.get())
+
+            print('queue domain items:', queue_domain)
+
+            if '是' in queue_domain:
+                return '是'
+            elif '非' in queue_domain:
+                return '非'
+            else:
+                return queue_domain[0]
         else:
             return None
 
