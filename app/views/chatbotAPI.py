@@ -19,7 +19,7 @@ pp.pprint(matcher.rule_data)
 # 連進MongoDB
 db = client['aiboxdb']
 
-times = 300 # global倒數var
+times = 1800 # global倒數var
 def logout_timeout():
     '''登出倒數計時方法，配合thread使用'''
     global times
