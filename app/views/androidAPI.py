@@ -305,3 +305,76 @@ def android_get_activity():
         'msg': '取得活動資訊成功'
     }
     return jsonify(resp)
+
+
+@app.route('/api/android/getWowPhone', methods=['GET'])
+def android_get_wow_phone():
+    '''取得wow_location電話
+    Returns:
+        {
+            'status': '200'->取得成功; '404'->取得失敗
+            'result': 取得wow_location電話; 錯誤訊息
+            'msg': 訊息
+        }
+    '''
+
+    db = client['aiboxdb']
+    temp_wow_phone_collect = db['temp_wow_phone']
+    temp_wow_phone_doc = temp_wow_phone_collect.find_one({'_id': 0})
+
+    if temp_wow_phone_doc['phone'] != '':
+        resp = {
+            'status': '200',
+            'result': {
+                'phone': temp_wow_phone_doc['phone']
+            },
+            'msg': '取得wow_location電話成功'
+        }
+
+        temp_wow_phone_doc = temp_wow_phone_collect.find_one_and_update({'_id': 0}, {'$set': {'phone': ''}}, upsert=False)
+
+        return jsonify(resp)
+    else:
+        resp = {
+            'status': '404',
+            'result': "null",
+            'msg': '取得wow_location電話失敗'
+        }
+        return jsonify(resp)
+
+
+@app.route('/api/android/getWowLocation', methods=['GET'])
+def android_get_wow_location_info():
+    '''取得wow_location_info
+    Returns:
+        {
+            'status': '200'->取得成功; '404'->取得失敗
+            'result': 取得wow_location_info; 錯誤訊息
+            'msg': 訊息
+        }
+    '''
+
+    db = client['aiboxdb']
+    temp_wow_location_info_collect = db['temp_wow_location_info']
+    temp_wow_location_info_cur = temp_wow_location_info_collect.find({}, {'_id': False})
+    doc = []
+    for cur in temp_wow_location_info_cur:
+        doc.append(cur)
+
+    if doc:
+        resp = {
+            'status': '200',
+            'result': doc,
+            'msg': '取得wow_location電話成功'
+        }
+
+        temp_wow_location_info_collect.remove({})
+
+        return jsonify(resp)
+    else:
+        resp = {
+            'status': '404',
+            'result': "null",
+            'msg': '取得wow_location電話失敗'
+        }
+        return jsonify(resp)
