@@ -3,6 +3,7 @@ from app.modules.domain_chatbot.emergency import Emergency
 from app.modules.domain_chatbot.hospital import Hospital
 from app.modules.domain_chatbot.disease import Disease
 from app.modules.domain_chatbot.weather import Weather
+from app.modules.domain_chatbot.wow import Wow
 from app.modules.domain_chatbot.location import Location
 from app.modules.domain_chatbot.reminder import Reminder
 from app.modules.domain_chatbot.concern import Concern
@@ -45,7 +46,7 @@ class Chatbot:
     # flag -> user_xxx or disease_xxx or loaction_xxx 表處於哪個模組的回覆流程中
     def response_word(self):
         # TODO 新增 or concern_done
-        if self.flag is None or self.flag=='special_done' or self.flag=='user_done' or self.flag=='emergency_done' or self.flag=='hospital_done' or self.flag=='disease_done' or self.flag=='weather_done' or self.flag=='location_done' or self.flag=='reminder_done' or self.flag=='morning_concern_done' or self.flag=='noon_concern_done':
+        if self.flag is None or self.flag=='special_done' or self.flag=='user_done' or self.flag=='emergency_done' or self.flag=='hospital_done' or self.flag=='disease_done' or self.flag=='weather_done' or self.flag=='wow_done' or self.flag=='location_done' or self.flag=='reminder_done' or self.flag=='morning_concern_done' or self.flag=='noon_concern_done':
             domain = self.choose_domain()
             if domain == 'user':
                 user = User()
@@ -66,6 +67,10 @@ class Chatbot:
             elif domain == 'weather':
                 weather = Weather(word_domain=self.word_domain, flag='weather_init')
                 return weather.response()
+            # 決定為wow的模組流程，可先收集word
+            elif domain == 'wow':
+                wow = Wow(word_domain=self.word_domain, flag='wow_init')
+                return wow.response()
             # 決定為location的模組流程，可先收集word
             elif domain == 'location':
                 location = Location(word_domain=self.word_domain, flag='location_init')
@@ -106,6 +111,9 @@ class Chatbot:
             elif 'weather' in self.flag:
                 weather = Weather(word_domain=self.word_domain, flag=self.flag)
                 return weather.response()
+            elif 'wow' in self.flag:
+                wow = Wow(word_domain=self.word_domain, flag=self.flag)
+                return wow.response()
             elif 'location' in self.flag:
                 location = Location(word_domain=self.word_domain, flag=self.flag)
                 return location.response()
@@ -128,10 +136,13 @@ class Chatbot:
         isEmergency = False
         isHospital = False
         isDisease = False
+        isWow = False
         isLocation = False
         isWeather = False
         isReminder = False
         isConcern = '' # 要分是早上、中午或晚上的關心
+
+        magic_location = ['老人共餐', '友善餐廳', '長照中心', '餐廳', '旅館', '運動中心', '銀髮友好站', '美術館', '樂齡中心', '魔術地點']
 
         for data in self.word_domain:
             if data['domain'] == '個人化' or data['domain'] == '性別':
@@ -144,8 +155,9 @@ class Chatbot:
                 isDisease = True
             if data['domain'] == '天氣':
                 isWeather = True
-            # 180713 刪除 data['domain']=='數字' & data['domain']=='距離'
-            if data['domain']=='地點' or data['domain'] == '城市':
+            if data['domain'] in magic_location:
+                isWow = True
+            if data['domain'] == '地點' or data['domain'] == '城市':
                 isLocation = True
             if data['domain'] == '提醒':
                 isReminder = True
@@ -162,6 +174,8 @@ class Chatbot:
             return 'disease'
         elif isWeather:
             return 'weather'
+        elif isWow:
+            return 'wow'
         elif isLocation:
             return 'location'
         elif isReminder:
