@@ -27,7 +27,7 @@ class Wow:
                 for data in self.word_domain:
                     if data['domain'] in magic_location:
                         self.template['魔術地點'] = data['word']
-                        self.template['區域'] = 'x' # 明確地點不用區域
+                        self.template['區域'] = 'c' # 明確地點不用區域
                     if data['domain'] == '打電話':
                         self.template['打電話'] = 'o'
                     if data['domain'] == '魔術地點':
@@ -84,23 +84,27 @@ class Wow:
         wow_location_cur = wow_location_collect.find({}, {'_id': False})
 
         magic_location = ['老人共餐', '友善餐廳', '長照中心', '餐廳', '旅館', '運動中心', '銀髮友好站', '美術館', '樂齡中心']
-        if self.template['魔術地點'] in magic_location:
+
+        # 查詢特定地點
+        # e.g. 查詢米蘭意廚
+        if self.template['區域'] == 'c':
+            for cur in wow_location_cur:
+                if pinyin.to_pinyin(cur['name'])==pinyin.to_pinyin(self.template['魔術地點']):
+                    temp_wow_location_info_collect = db['temp_wow_location_info']
+                    temp_wow_location_info_collect.insert_one(cur)
+            
+        # 查詢某地區的魔術地點
+        # e.g. 查詢台北市的運動中心
+        elif self.template['魔術地點'] in magic_location:
             wow_data = []
             for cur in wow_location_cur:
                 if pinyin.to_pinyin(cur['type'])==pinyin.to_pinyin(self.template['魔術地點']) and pinyin.to_pinyin(cur['addr'][:3]
                 )==pinyin.to_pinyin(self.template['區域']):
-                    print(cur)
                     wow_data.append(cur)
             
             temp_wow_location_info_collect = db['temp_wow_location_info']
             for data in wow_data:
                 temp_wow_location_info_collect.insert_one(data)
-
-        for cur in wow_location_cur:
-            if pinyin.to_pinyin(cur['name']) == pinyin.to_pinyin(self.template['魔術地點']):
-                # 把電話號碼存進temp_wow_phone
-                temp_wow_phone_collect = db['temp_wow_phone']
-                temp_wow_phone_doc = temp_wow_phone_collect.find_one_and_update({'_id': 0}, {'$set': {'phone': cur['phone']}}, upsert=False)
 
     # 地點上傳至資料庫
     def store_database(self):
@@ -113,6 +117,8 @@ class Wow:
             database_template = {
                 '_id': collect.count() + 1,
                 'location': self.template['魔術地點'],
+                'number': 0,
+                'unit': '公尺',
                 'region': self.template['區域'],
                 'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
