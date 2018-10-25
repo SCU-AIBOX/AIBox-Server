@@ -21,7 +21,7 @@ morning流程:
         False -> 7.
     5. morning_diastolic_blood_pressure: 紀錄舒張壓
     6. morning_systolic_blood_pressure: 紀錄收縮壓
-    7. morning_concern_done: 早上關心完成
+    7. morning_concern_done: 早上關心完成，並建議應吃/不應吃食物
 
 noon流程:
     1. noon_init: 初始化
@@ -52,6 +52,7 @@ class Concern:
         self.flag = flag
         self.word_domain = word_domain
         self.nickname = nickname
+        self.heart, self.stroke, self.hyper, self.chole, self.dia = self.decide_suggest_food()
 
         # 判斷是哪種concern, 就選擇那種模板
         if 'morning' in self.flag:
@@ -190,7 +191,18 @@ class Concern:
                 content['response'] = self.template['量血壓回覆']
             elif self.template['量血壓']!='' and self.template['量血壓']=='False':
                 content['flag'] = 'morning_concern_done'
-                content['response'] = self.template['未量血壓回覆']
+                temp = ''
+                if self.heart == 'True':
+                    temp += self.template['心律不整建議回覆']
+                if self.stroke == 'True':
+                    temp += self.template['中風建議回覆']
+                if self.hyper == 'True':
+                    temp += self.template['高血壓建議回覆']
+                if self.chole == 'True':
+                    temp += self.template['膽固醇建議回覆']
+                if self.dia == 'True':
+                    temp += self.template['糖尿病建議回覆']
+                content['response'] = self.template['未量血壓回覆'] + temp + self.template['建議總結回覆']
                 self.store_database()
                 self.clean_template()
             elif self.template['紀錄血壓'] == '':
@@ -210,22 +222,70 @@ class Concern:
                 cal_result = blood_pressure.cal_pressure(diastolic, systolic)
                 if cal_result == '正常':
                     self.template['血壓狀況'] = '正常'
-                    content['response'] = self.template['正常血壓回覆']
+                    temp = ''
+                    if self.heart == 'True':
+                        temp += self.template['心律不整建議回覆']
+                    if self.stroke == 'True':
+                        temp += self.template['中風建議回覆']
+                    if self.hyper == 'True':
+                        temp += self.template['高血壓建議回覆']
+                    if self.chole == 'True':
+                        temp += self.template['膽固醇建議回覆']
+                    if self.dia == 'True':
+                        temp += self.template['糖尿病建議回覆']
+                    content['response'] = self.template['正常血壓回覆'] + temp + self.template['建議總結回覆']
+
                     self.store_database()
                     self.clean_template()
                 elif cal_result == '高':
                     self.template['血壓狀況'] = '高'
-                    content['response'] = self.template['高血壓回覆']
+                    temp = ''
+                    if self.heart == 'True':
+                        temp += self.template['心律不整建議回覆']
+                    if self.stroke == 'True':
+                        temp += self.template['中風建議回覆']
+                    if self.hyper == 'True':
+                        temp += self.template['高血壓建議回覆']
+                    if self.chole == 'True':
+                        temp += self.template['膽固醇建議回覆']
+                    if self.dia == 'True':
+                        temp += self.template['糖尿病建議回覆']
+                    content['response'] = self.template['高血壓回覆'] + temp + self.template['建議總結回覆']
+
                     self.store_database()
                     self.clean_template()
                 elif cal_result == '低':
                     self.template['血壓狀況'] = '低'
-                    content['response'] = self.template['低血壓回覆']
+                    temp = ''
+                    if self.heart == 'True':
+                        temp += self.template['心律不整建議回覆']
+                    if self.stroke == 'True':
+                        temp += self.template['中風建議回覆']
+                    if self.hyper == 'True':
+                        temp += self.template['高血壓建議回覆']
+                    if self.chole == 'True':
+                        temp += self.template['膽固醇建議回覆']
+                    if self.dia == 'True':
+                        temp += self.template['糖尿病建議回覆']
+                    content['response'] = self.template['低血壓回覆'] + temp + self.template['建議總結回覆']
+
                     self.store_database()
                     self.clean_template()
             else:
                 content['flag'] = 'morning_concern_done'
-                content['response'] = self.template['完成回覆']
+                temp = ''
+                if self.heart == 'True':
+                    temp += self.template['心律不整建議回覆']
+                if self.stroke == 'True':
+                    temp += self.template['中風建議回覆']
+                if self.hyper == 'True':
+                    temp += self.template['高血壓建議回覆']
+                if self.chole == 'True':
+                    temp += self.template['膽固醇建議回覆']
+                if self.dia == 'True':
+                    temp += self.template['糖尿病建議回覆']
+                content['response'] = self.template['完成回覆'] + temp + self.template['建議總結回覆']
+
                 self.store_database()
                 self.clean_template()
 
@@ -406,6 +466,31 @@ class Concern:
 
             with open(os.path.join(BASE_DIR, 'domain_chatbot/template/night_concern.json'), 'w', encoding='UTF-8') as output:
                 json.dump(self.template, output, indent=4, ensure_ascii=False)
+
+    # 根據使用者的病史紀錄，建議哪些症狀應吃及不吃的食物
+    def decide_suggest_food(self):
+        heart = 'False'
+        stroke = 'False'
+        hyper = 'False'
+        chole = 'False'
+        dia = 'False'
+        db = client['aiboxdb']
+        user_collect = db['users']
+        # 取得concern_lock的登入user_nickname
+        concern_lock_collect = db['concern_lock']
+        concern_lock_doc = concern_lock_collect.find_one({'_id': 0})
+        if concern_lock_doc['lock'] == True:
+            user_nickname = concern_lock_doc['user_nickname']
+            user_collect = user_collect.find_one({'nickname': user_nickname})
+            heart = user_collect['health']['heart_problem']
+            stroke = user_collect['health']['stroke']
+            hyper = user_collect['health']['high_blood']
+            chole = user_collect['health']['high_cholesterol']
+            dia = user_collect['health']['diabetes']
+        return heart, stroke, hyper, chole, dia
+
+
+
 
 
 

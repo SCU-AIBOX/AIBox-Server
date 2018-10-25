@@ -307,6 +307,111 @@ def android_get_activity():
     return jsonify(resp)
 
 
+# todo 尚未測試
+# 取得特定區域公車站
+@app.route('/api/android/getBusStation', methods=['GET'])
+def android_get_BusStation():
+
+    '''取得醫院的資訊
+        Params:
+            region: 台北、新北、台中、台南
+    '''
+    '''
+    Returns:
+        {
+            'status': '200'->取得成功; '404'->取得失敗
+            'result': 成功訊息; 錯誤訊息
+            'msg': 訊息
+        }
+    '''
+    try:
+        region = request.args.get('region')
+        if region == '台北市':
+            location_collect = db['busstation_Taipei']
+        elif region == '新北市':
+            location_collect = db['busstation_NewTaipei']
+        elif region == '台南市':
+            location_collect = db['busstation_Tainan']
+        else:
+            location_collect = db['busstation_Taichung']
+        location_doc = location_collect.find({}, {'_id': False})
+
+    except Exception as err:
+        resp = {
+            'status': '404',
+            'result': err,
+            'msg': '取得公車站地點失敗'
+        }
+        return jsonify(resp)
+
+    resp = {
+        'status': '200',
+        'result': list(location_doc),
+        'msg': '取得公車站地點成功'
+    }
+    return jsonify(resp)
+
+# todo 尚未測試
+# 取得捷運站資料
+@app.route('/api/android/getMRT', methods=['GET'])
+def android_get_MRT():
+
+    '''
+    Returns:
+        {
+            'status': '200'->取得成功; '404'->取得失敗
+            'result': 成功訊息; 錯誤訊息
+            'msg': 訊息
+        }
+    '''
+    try:
+        location_collect = db['MRT']
+        location_doc = location_collect.find({}, {'_id': False})
+    except Exception as err:
+        resp = {
+            'status': '404',
+            'result': err,
+            'msg': '取得捷運站地點失敗'
+        }
+        return jsonify(resp)
+
+    resp = {
+        'status': '200',
+        'result': list(location_doc),
+        'msg': '取得捷運站地點成功'
+    }
+    return jsonify(resp)
+
+# todo 尚未測試
+# 取得加油站資料
+@app.route('/api/android/getGasStation', methods=['GET'])
+def android_get_gatStation():
+    '''
+    Returns:
+        {
+            'status': '200'->取得成功; '404'->取得失敗
+            'result': 成功訊息; 錯誤訊息
+            'msg': 訊息
+        }
+    '''
+    try:
+        location_collect = db['gasstation']
+        location_doc = location_collect.find({}, {'_id': False})
+    except Exception as err:
+        resp = {
+            'status': '404',
+            'result': err,
+            'msg': '取得加油站地點失敗'
+        }
+        return jsonify(resp)
+
+    resp = {
+        'status': '200',
+        'result': list(location_doc),
+        'msg': '取得加油站地點成功'
+    }
+    return jsonify(resp)
+
 @app.route('/api/android/getWowPhone', methods=['GET'])
 def android_get_wow_phone():
     '''取得wow_location電話
@@ -359,6 +464,7 @@ def android_get_wow_location_info():
     temp_wow_location_info_cur = temp_wow_location_info_collect.find({}, {'_id': False})
     doc = []
     for cur in temp_wow_location_info_cur:
+        print(cur)
         doc.append(cur)
 
     if doc:
